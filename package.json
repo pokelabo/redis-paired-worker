@@ -1,0 +1,32 @@
+{
+    "name": "redis-paired-worker",
+    "description": "A job worker solution that is robust, concurrent and highly available for Node.js using redis.",
+    "version": "0.0.1",
+    "author": "Pokelabo <support@pokelabo.co.jp>",
+    "contributors": [
+        {
+            "name": "HANAI Tohru",
+            "email": "hanai@pokelabo.co.jp"
+        }
+    ],
+    "scripts": {
+        "test": "buster test"
+    },
+    "main": "./index.js",
+    "keywords": [
+        "redis",
+        "worker",
+        "lock",
+        "flickr"
+    ],
+    "private": false,
+    "dependencies": {
+        "debug": ">= 0.7.0",
+        "redis": ">= 0.8.2",
+        "node.extend": ">= 1.0.0"
+    },
+    "devDependencies": {
+        "buster": ">= 0.6.3"
+    },
+    "license": "MIT"
+}

@@ -12,3 +12,12 @@ logs
 results
 
 npm-debug.log
+
+# emacs
+\#*
+*~
+
+# mac
+.DS_Store
+
+/node_modules
