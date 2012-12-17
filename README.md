@@ -47,18 +47,11 @@ Conceptual scenario and usage
 
 Installation
 ------------
-1. `git clone https://github.com/pokelabo/redis-paired-worker` or `git submodule add https://github.com/pokelabo/redis-paired-worker`
-1. Configure your loader with a package:
-
-    ```javascript
-    packages: [
-        { name: 'redis-paired-worker', location: 'path/to/redis-paired-worker/', main: 'redis-paired-worker' },
-        // ... other packages ...
-    ]
-    ```
+1. `npm install redis-paired-worker`
 
 ## Changelog
 
+* 0.1.1 - Update README.md
 * 0.1.0 - Removed `payload` argument from `RedisPairedWorker.lock()`.
 * 0.0.1 - First release.
 
