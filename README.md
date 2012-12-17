@@ -5,7 +5,7 @@ A job worker solution that is robust, concurrent and highly available for Node.j
 
 Overview
 --------
-This is a robust concurrent and highly available job solution, derived an idea of Flickr's article:
+This is a robust concurrent and highly available job solution, derived from an idea of Flickr's article:
 [Highly Available Real Time Push Notifications and You](http://code.flickr.net/2012/12/12/highly-available-real-time-notifications/).
 
 ``RedisPaidWorker`` backups any tasks with high availability in two different processes, which maybe in a different server or even a different data center.
@@ -40,10 +40,10 @@ Features and benefits
 
 Conceptual scenario and usage
 -----------------------------
-* Two ``RedisPaidWorker`` try to acquire same lock but either will win; another will stay.
-* If the winner calls a specified callback of its client. Client will do a task then tell the result to the worker.
-* If the task has been done successfully, the another worker deletes the lock.
-* If the task has been failed(simply failed or the process may been crashed), the another worker takes over the lock and its client will do the task.
+1. Two ``RedisPaidWorker`` try to acquire same lock but either will win; another will stay.
+1. If the winner calls a specified callback of its client. Client will do a task then tell the result to the worker.
+1. If the task has been done successfully, the another worker deletes the lock.
+1. If the task has been failed(simply failed or the process may been crashed), the another worker takes over the lock and its client will do the task.
 
 Installation
 ------------
