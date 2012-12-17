@@ -59,6 +59,7 @@ Installation
 
 ## Changelog
 
+* 0.1.0 - Removed `payload` argument from `RedisPairedWorker.lock()`.
 * 0.0.1 - First release.
 
 ## License

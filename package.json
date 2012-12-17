@@ -1,7 +1,7 @@
 {
     "name": "redis-paired-worker",
     "description": "A job worker solution that is robust, concurrent and highly available for Node.js using redis.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "author": "Pokelabo <support@pokelabo.co.jp>",
     "contributors": [
         {

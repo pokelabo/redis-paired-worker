@@ -36,17 +36,17 @@ buster.testCase 'RedisPairedWorker', {
         worker1 = new RedisPairedWorker config
         worker2 = new RedisPairedWorker config
 
-        callback = this.stub().callsArgWith 3, true
+        callback = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
         this.spy client, 'del'
 
-        worker1.lock client, 'testLockId', "payload1", callback
-        worker2.lock client, 'testLockId', "payload2", callback
+        worker1.lock client, 'testLockId', callback
+        worker2.lock client, 'testLockId', callback
 
         assert callback.calledTwice
-        assert callback.calledWith null, true, 'payload1'
-        assert callback.calledWith null, false, 'payload2'
+        assert callback.calledWith null, true
+        assert callback.calledWith null, false
         # the lock should been deleted
         assert client.del.calledOnce
 
@@ -54,32 +54,25 @@ buster.testCase 'RedisPairedWorker', {
         worker1 = new RedisPairedWorker config
         worker2 = new RedisPairedWorker config
 
-        callback1 = this.stub().callsArgWith 3, false
-        callback2 = this.stub().callsArgWith 3, true
+        callback1 = this.stub().callsArgWith 2, false
+        callback2 = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
         this.spy client, 'del'
 
-        worker1.lock client, 'testLockId', "payload1", callback1
-        worker2.lock client, 'testLockId', "payload2", callback2
-        assert callback1.calledWith null, true, 'payload1'
-        assert callback2.calledWith null, true, 'payload2'
+        worker1.lock client, 'testLockId', callback1
+        worker2.lock client, 'testLockId', callback2
+        assert callback1.calledWith null, true
+        assert callback2.calledWith null, true
         # the lock should been deleted
         assert client.del.calledOnce
-
-    'Can omit arguments for lock()': () ->
-        worker1 = new RedisPairedWorker config
-        callback = this.stub().callsArgWith 3, true
-        client = redisClientStub()
-        worker1.lock client, 'testLockId', callback
-        assert callback.calledWith null, true, null
 
     'If redis.setnx fails, the worker notifies it with error object and lock will be left.': (done) ->
         worker1 = new RedisPairedWorker config
         worker2 = new RedisPairedWorker config
 
-        callback1 = this.stub().callsArgWith 3, false
-        callback2 = this.stub().callsArgWith 3, true
+        callback1 = this.stub().callsArgWith 2, false
+        callback2 = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
         client.setnx = (key, value, cb) ->
@@ -87,12 +80,12 @@ buster.testCase 'RedisPairedWorker', {
         this.spy client, 'del'
 
         setTimeout () ->
-            worker1.lock client, 'testLockId', "payload1", callback1
-            worker2.lock client, 'testLockId', "payload2", callback2
+            worker1.lock client, 'testLockId', callback1
+            worker2.lock client, 'testLockId', callback2
             assert callback1.calledOnce
-            assert callback1.calledWith 'anError', false, 'payload1'
+            assert callback1.calledWith 'anError', false
             assert callback2.calledOnce
-            assert callback2.calledWith 'anError', false, 'payload2'
+            assert callback2.calledWith 'anError', false
             # redis.del should have not been called
             refute client.del.calledOnce
             done()
