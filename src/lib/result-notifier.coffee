@@ -2,40 +2,29 @@ constants = require './constants'
 debug = (require 'debug')('redis-pw')
 util = require 'util'
 
+LockStatus = require './lock-status'
+
 class ResultNotifier
     @acquired: (lockInfo) ->
-        debug "acquired lock for '#{lockInfo.key}'"
         lockInfo.callback null, true, (succeeded) =>
             if succeeded
-                debug "job for '#{lockInfo.key}' has been done; set the sentinel value DONE"
-                lockInfo.client.set lockInfo.key, constants.SENTINEL_JOB_DONE
+                debug "['%s'] client has done the job; set the sentinel value DONE", lockInfo.key
+                lockValue = LockStatus.stringify lockInfo.expiry, constants.SENTINEL_JOB_DONE
             else 
-                debug "job for '#{lockInfo.key}' has been failed; set the sentinel value FAIL"
-                lockInfo.client.set lockInfo.key, constants.SENTINEL_JOB_FAIL
-
-    @acquiredAfterOppositeFail: (lockInfo) ->
-        lockInfo.callback null, true, (succeeded) =>
-            if succeeded
-                debug "job for '#{lockInfo.key}' has been done; delete the lock"
-                lockInfo.client.del lockInfo.key
-            else 
-                debug "job for '#{lockInfo.key}' has been failed, too; delete the lock"
-                lockInfo.client.del lockInfo.key
+                debug "['%s'] client has failed on the job; set the sentinel value FAIL", lockInfo.key
+                lockValue = LockStatus.stringify lockInfo.expiry, constants.SENTINEL_JOB_FAIL
+            lockInfo.client.set lockInfo.key, lockValue
 
     @oppsiteHasCompleted: (lockInfo) ->
-        debug "job for '#{lockInfo.key}' has been done by opposite; delete the lock"
+        debug "['%s'] opposite has done the job; delete the lock", lockInfo.key
         lockInfo.client.del lockInfo.key
+        lockInfo.callback null, false, () ->
 
+    @oppositeHasFailed: (lockInfo) ->
         lockInfo.callback null, false, () ->
 
     @errorOccurred: (error, lockInfo) ->
-        debug "error on acquiring lock for '#{lockInfo.key}': #{util.inspect error}"
-        if lockInfo.status is constants.STATUS_OPPOSITE_FAIL
-            debug "delete the lock '#{lockInfo.key}'"
-            lockInfo.client.del lockInfo.key
-        else
-            debug "set the sentinel value FAIL for '#{lockInfo.key}'"
-            lockInfo.client.set constants.SENTINEL_JOB_FAIL
+        debug "['%s'] error on acquiring lock: %s", lockInfo.key, util.inspect error
         lockInfo.callback error, false, () ->
 
 module.exports = ResultNotifier

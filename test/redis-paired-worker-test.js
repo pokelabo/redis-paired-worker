@@ -63,7 +63,7 @@
       assert(callback.calledWith(null, false));
       return assert(client.del.calledOnce);
     },
-    'When a faster worker fails its job after acquires a lock, another should take over the job': function() {
+    'When a faster worker fails its job after acquires a lock, another leaves the job undone': function() {
       var callback1, callback2, client, worker1, worker2;
       worker1 = new RedisPairedWorker(config);
       worker2 = new RedisPairedWorker(config);
@@ -74,8 +74,8 @@
       worker1.lock(client, 'testLockId', callback1);
       worker2.lock(client, 'testLockId', callback2);
       assert(callback1.calledWith(null, true));
-      assert(callback2.calledWith(null, true));
-      return assert(client.del.calledOnce);
+      assert(callback2.calledWith(null, false));
+      return refute(client.del.calledOnce);
     },
     'If redis.setnx fails, the worker notifies it with error object and lock will be left.': function(done) {
       var callback1, callback2, client, worker1, worker2;

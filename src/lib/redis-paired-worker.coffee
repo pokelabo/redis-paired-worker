@@ -18,7 +18,7 @@ class RedisPairedWorker
     # `lockName`: Any name for a lock. Must follw redis' key naming rules.
     # `callback`: The function to call when the attempt has finished.
     lock: (client, lockName, callback) ->
-        debug "lock() begin '#{lockName}'"
+        debug "['%s'] lock() start --->", lockName
 
         lockInfo =
             instance: this
@@ -26,7 +26,6 @@ class RedisPairedWorker
             key: "lock." + lockName
             expiry: Date.now() + @config.lockTimeout
             callback: callback
-            status: constants.STATUS_SELF_UNDONE
 
         RedisLock.acquireLock lockInfo, 1
         return
