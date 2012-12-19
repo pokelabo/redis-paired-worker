@@ -29,8 +29,11 @@
           return cb(null, 1);
         }
       },
-      del: function(key, value, cb) {
-        return this.value = null;
+      del: function(key, cb) {
+        this.value = null;
+        if (cb) {
+          return cb(null, 1);
+        }
       }
     };
   };
@@ -96,6 +99,27 @@
         assert(callback2.calledOnce);
         assert(callback2.calledWith('anError', false));
         refute(client.del.calledOnce);
+        return done();
+      }, 10);
+    },
+    'If the lock had been expired, take over it.': function(done) {
+      var callback1, callback2, client, worker1, worker2;
+      worker1 = new RedisPairedWorker({
+        lockTimeout: 10
+      });
+      worker2 = new RedisPairedWorker({
+        lockTimeout: 20
+      });
+      callback1 = this.stub().callsArgWith(2, false);
+      callback2 = this.stub().callsArgWith(2, true);
+      client = redisClientStub();
+      this.spy(client, 'del');
+      worker1.lock(client, 'testLockId', callback1);
+      assert(callback1.calledWith(null, true));
+      return setTimeout(function() {
+        worker2.lock(client, 'testLockId', callback2);
+        assert(callback2.calledWith(null, true));
+        assert(client.del.calledOnce);
         return done();
       }, 10);
     }

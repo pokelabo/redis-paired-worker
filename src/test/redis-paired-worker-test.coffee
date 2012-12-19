@@ -16,8 +16,9 @@ redisClientStub = () ->
       set: (key, value, cb) ->
         this.value = value
         cb null, 1 if cb
-      del: (key, value, cb) ->
+      del: (key, cb) ->
         this.value = null
+        cb null, 1 if cb
 
 buster.testCase 'RedisPairedWorker', {
      'Do not change default config': () ->
@@ -90,4 +91,24 @@ buster.testCase 'RedisPairedWorker', {
              refute client.del.calledOnce
              done()
          , 10
+
+     'If the lock had been expired, take over it.': (done) ->
+        worker1 = new RedisPairedWorker lockTimeout: 10
+        worker2 = new RedisPairedWorker lockTimeout: 20
+
+        callback1 = this.stub().callsArgWith 2, false
+        callback2 = this.stub().callsArgWith 2, true
+
+        client = redisClientStub()
+        this.spy client, 'del'
+
+        worker1.lock client, 'testLockId', callback1
+        assert callback1.calledWith null, true
+        setTimeout () ->
+            worker2.lock client, 'testLockId', callback2
+            assert callback2.calledWith null, true
+            ## the lock should not been deleted
+            assert client.del.calledOnce
+            done()
+        , 10
 }

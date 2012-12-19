@@ -51,6 +51,7 @@ Installation
 
 ## Changelog
 
+* 0.2.1 - Fixed a bug on deleting an expired lock.
 * 0.2.0 - Changed the structure of redis' lock value, to store both lock expiration date and lock status.
 * 0.1.1 - Update README.md
 * 0.1.0 - Removed `payload` argument from `RedisPairedWorker.lock()`.

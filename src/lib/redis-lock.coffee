@@ -31,8 +31,7 @@ class RedisLock
                 return
 
             lockStatus = LockStatus.parse lockValue
-            console.log "lockValue = ", lockValue
-            console.log "lockStatus = ", lockStatus
+            debug "['%s' #%d] lockStatus = %s, lockValue = %s", lockInfo.key, attempt, util.inspect(lockStatus), lockValue
             if lockStatus.sentinel is constants.SENTINEL_JOB_DONE
                 debug "['%s' #%d] opposite has completed its job successfully", lockInfo.key, attempt
                 ResultNotifier.oppsiteHasCompleted lockInfo, false, attempt
@@ -44,7 +43,7 @@ class RedisLock
             # If true, then delete the lock and retry immediately
             if lockStatus.expiry <= now
                 debug "['%s' #%d] the lock has been expired; opposite may have crushed during job", lockInfo.key, attempt
-                lockInfo.client.del lockInfo.key, (error) ->
+                lockInfo.client.del lockInfo.key, (error) =>
                     if error
                         lockInfo.instance.config.clientErrorPolicy error, lockInfo, attempt
                         return
