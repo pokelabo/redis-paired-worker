@@ -4,9 +4,9 @@ extend = require 'node.extend'
 RedisLock = require './redis-lock'
 
 defaultConfig =
-    lockTimeout: 100
-    firstAttemptInterval: 10
-    otherAttemptInterval: 30
+    lockTimeout: 100 * 1000
+    firstAttemptInterval: 10 * 1000
+    otherAttemptInterval: 30 * 1000
     clientErrorPolicy: RedisLock.onError
 
 class RedisPairedWorker
