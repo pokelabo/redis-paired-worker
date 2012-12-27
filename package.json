@@ -2,7 +2,7 @@
     "name": "redis-paired-worker",
     "description": "A job worker solution that is robust, concurrent and highly available for Node.js using redis.",
     "homepage": "https://github.com/pokelabo/redis-paired-worker/",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "author": "Pokelabo <support@pokelabo.co.jp>",
     "contributors": [
         {

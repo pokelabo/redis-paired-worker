@@ -6,21 +6,21 @@ config = {}
 redisClientStub = () ->
     client =
       value: null
-      setnx: (key, value, cb) ->
+      hsetnx: (key, field, value, cb) ->
         if @value isnt null
             return cb null, 0
         @value = value
         cb null, 1
-      get: (key, cb) ->
+      hget: (key, field, cb) ->
         cb null, @value if cb
-      set: (key, value, cb) ->
+      hset: (key, field, value, cb) ->
         @value = value
         cb null, 1 if cb
-      del: (key, cb) ->
+      hdel: (key, field, cb) ->
         @value = null
         cb null, 1 if cb
 
-buster.testCase 'RedisPairedWorker', {
+buster.testCase 'RedisPairedWorker(hash)', {
     'Do not change default config': () ->
         worker0 = new RedisPairedWorker {}
         defaultTimeout = worker0.config.lockTimeout
@@ -40,16 +40,16 @@ buster.testCase 'RedisPairedWorker', {
         callback = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
-        this.spy client, 'del'
+        this.spy client, 'hdel'
 
-        worker1.lock client, 'testLockId', callback
-        worker2.lock client, 'testLockId', callback
+        worker1.hlock client, 'testLockId', 'aField', callback
+        worker2.hlock client, 'testLockId', 'aField', callback
 
         assert callback.calledTwice
         assert callback.calledWith null, true
         assert callback.calledWith null, false
         # the lock should been deleted
-        assert client.del.calledOnce
+        assert client.hdel.calledOnce
 
     'When a faster worker fails its job after acquires a lock, another leaves the job undone': () ->
         worker1 = new RedisPairedWorker config
@@ -59,14 +59,14 @@ buster.testCase 'RedisPairedWorker', {
         callback2 = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
-        this.spy client, 'del'
+        this.spy client, 'hdel'
 
-        worker1.lock client, 'testLockId', callback1
-        worker2.lock client, 'testLockId', callback2
+        worker1.hlock client, 'testLockId', 'aField', callback1
+        worker2.hlock client, 'testLockId', 'aField', callback2
         assert callback1.calledWith null, true
         assert callback2.calledWith null, false
         # the lock should not been deleted
-        refute client.del.calledOnce
+        refute client.hdel.calledOnce
 
     'If redis.setnx fails, the worker notifies it with error object and lock will be left.': (done) ->
         worker1 = new RedisPairedWorker config
@@ -76,19 +76,19 @@ buster.testCase 'RedisPairedWorker', {
         callback2 = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
-        client.setnx = (key, value, cb) ->
+        client.hsetnx = (key, field, value, cb) ->
             cb "anError", 0
-        this.spy client, 'del'
+        this.spy client, 'hdel'
 
         setTimeout () ->
-            worker1.lock client, 'testLockId', callback1
-            worker2.lock client, 'testLockId', callback2
+            worker1.hlock client, 'testLockId', 'aField', callback1
+            worker2.hlock client, 'testLockId', 'aField', callback2
             assert callback1.calledOnce
             assert callback1.calledWith 'anError', false
             assert callback2.calledOnce
             assert callback2.calledWith 'anError', false
-            # redis.del should have not been called
-            refute client.del.calledOnce
+            # redis.hdel should have not been called
+            refute client.hdel.calledOnce
             done()
         , 10
 
@@ -100,15 +100,15 @@ buster.testCase 'RedisPairedWorker', {
         callback2 = this.stub().callsArgWith 2, true
 
         client = redisClientStub()
-        this.spy client, 'del'
+        this.spy client, 'hdel'
 
-        worker1.lock client, 'testLockId', callback1
+        worker1.hlock client, 'testLockId', 'aField', callback1
         assert callback1.calledWith null, true
         setTimeout () ->
-            worker2.lock client, 'testLockId', callback2
+            worker2.hlock client, 'testLockId', 'aField', callback2
             assert callback2.calledWith null, true
             ## the lock should not been deleted
-            assert client.del.calledOnce
+            assert client.hdel.calledOnce
             done()
         , 10
 }

@@ -25,9 +25,17 @@ var config = {
 
 var redisClient = redis.createClient(6379, 'localhost');
 var worker = new RedisPaidWorker(config);
-worker.lock(redisClient, 'aTask-id', { data: 'xyz' }, function(error, acquired, payload, callback) {
+worker.lock(redisClient, 'aTask-id', { data: 'xyz' }, function(error, acquired, callback) {
   if (acquired) {
-     // do task with payload...
+     // do task...
+     callback(true);  // task has done successfully
+  }
+});
+
+// lock using redis' hash
+worker.hlock(redisClient, 'aTask-id', 'aField', { data: 'xyz' }, function(error, acquired, callback) {
+  if (acquired) {
+     // do task...
      callback(true);  // task has done successfully
   }
 });
@@ -51,6 +59,7 @@ Installation
 
 ## Changelog
 
+* 0.3.0 - Added method `RedisPairedWorker.hlock` to use redis' hash for locks.
 * 0.2.2 - Modified default timeout values.
 * 0.2.1 - Fixed a bug on deleting an expired lock.
 * 0.2.0 - Changed the structure of redis' lock value, to store both lock expiration date and lock status.
