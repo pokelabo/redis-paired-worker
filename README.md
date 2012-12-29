@@ -59,6 +59,7 @@ Installation
 
 ## Changelog
 
+* 0.3.1 - Removed `debug` module dependency.
 * 0.3.0 - Added method `RedisPairedWorker.hlock` to use redis' hash for locks.
 * 0.2.2 - Modified default timeout values.
 * 0.2.1 - Fixed a bug on deleting an expired lock.

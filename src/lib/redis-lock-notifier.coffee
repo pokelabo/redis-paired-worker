@@ -1,5 +1,5 @@
 constants = require './constants'
-debug = (require 'debug')('redis-pw')
+logger = require './logger'
 util = require 'util'
 
 LockStatus = require './lock-status'
@@ -8,15 +8,15 @@ class RedisLockNotifier
     @acquired: (lockInfo) ->
         lockInfo.callback null, true, (succeeded) =>
             if succeeded
-                debug "['%s'] client has done the job; set the sentinel value DONE", lockInfo.key
+                logger.verbose "[rpw:#{lockInfo.key}] client has done the job; set the sentinel value DONE"
                 lockValue = LockStatus.stringify lockInfo.expiry, constants.SENTINEL_JOB_DONE
             else 
-                debug "['%s'] client has failed on the job; set the sentinel value FAIL", lockInfo.key
+                logger.verbose "[rpw:#{lockInfo.key}] client has failed on the job; set the sentinel value FAIL"
                 lockValue = LockStatus.stringify lockInfo.expiry, constants.SENTINEL_JOB_FAIL
             lockInfo.client.set lockInfo.key, lockValue
 
     @oppsiteHasCompleted: (lockInfo) ->
-        debug "['%s'] opposite has done the job; delete the lock", lockInfo.key
+        logger.verbose "[rpw:#{lockInfo.key}] opposite has done the job; delete the lock"
         lockInfo.client.del lockInfo.key
         lockInfo.callback null, false, () ->
 
@@ -24,7 +24,7 @@ class RedisLockNotifier
         lockInfo.callback null, false, () ->
 
     @errorOccurred: (error, lockInfo) ->
-        debug "['%s'] error on acquiring lock: %s", lockInfo.key, util.inspect error
+        logger.verbose "[rpw:#{lockInfo.key}] error on acquiring lock: %s", util.inspect error
         lockInfo.callback error, false, () ->
 
 module.exports = RedisLockNotifier

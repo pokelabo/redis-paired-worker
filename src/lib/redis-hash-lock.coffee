@@ -1,5 +1,5 @@
 constants = require './constants'
-debug = (require 'debug')('redis-pw')
+logger = require './logger'
 util = require 'util'
 
 LockStatus = require './lock-status'
@@ -7,17 +7,17 @@ RedisHashLockNotifier = require './redis-hash-lock-notifier'
 
 class RedisHashLock
     @acquireLock: (lockInfo, attempt) ->
-        debug "['%s . %s' #%d] begin locking", lockInfo.key, lockInfo.field, attempt
+        logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} begin locking"
 
         lockValue = LockStatus.stringify lockInfo.expiry, constants.SENTINEL_JOB_UNDONE
         lockInfo.client.hsetnx lockInfo.key, lockInfo.field, lockValue, (error, result) ->
             if error
-                debug "['%s . %s' #%d] error on redis.setnx: #{util.inspect error}", lockInfo.key, lockInfo.field, attempt
+                logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} error on redis.setnx: #{util.inspect error}"
                 lockInfo.instance.config.clientErrorPolicy error, lockInfo, attempt
                 return
 
             if result is 1
-                debug "['%s . %s' #%d] acquired lock", lockInfo.key, lockInfo.field, attempt
+                logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} acquired lock"
                 RedisHashLockNotifier.acquired lockInfo
             else
                 RedisHashLock.checkLock lockInfo, attempt
@@ -31,9 +31,9 @@ class RedisHashLock
                 return
 
             lockStatus = LockStatus.parse lockValue
-            debug "['%s . %s' #%d] lockStatus = %s, lockValue = %s", lockInfo.key, lockInfo.field, attempt, util.inspect(lockStatus), lockValue
+            logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} lockStatus = %s, lockValue = %s", util.inspect(lockStatus), lockValue
             if lockStatus.sentinel is constants.SENTINEL_JOB_DONE
-                debug "['%s . %s' #%d] opposite has completed its job successfully", lockInfo.key, lockInfo.field, attempt
+                logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} opposite has completed its job successfully"
                 RedisHashLockNotifier.oppsiteHasCompleted lockInfo, false, attempt
                 return
 
@@ -42,7 +42,7 @@ class RedisHashLock
             # Check if the lock has been expired.
             # If true, then delete the lock and retry immediately
             if lockStatus.expiry <= now
-                debug "['%s' #%d] the lock has been expired; opposite may have crushed during job", lockInfo.key, attempt
+                logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] the lock has been expired; opposite may have crushed during job"
                 lockInfo.client.hdel lockInfo.key, lockInfo.field, (error) =>
                     if error
                         lockInfo.instance.config.clientErrorPolicy error, lockInfo, attempt
@@ -53,7 +53,7 @@ class RedisHashLock
             # If opposite had tried to do the task but failed, this process would fail, too.
             # So let it be untouch.
             if lockStatus.sentinel is constants.SENTINEL_JOB_FAIL
-                debug "['%s . %s' #%d] opposite had failed to complete its job. Do nothing", lockInfo.key, lockInfo.field, attempt
+                logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} opposite had failed to complete its job. Do nothing"
                 RedisHashLockNotifier.oppositeHasFailed lockInfo
                 return
 
@@ -63,7 +63,7 @@ class RedisHashLock
             else
                 Math.min lockInfo.expiry - now, lockInfo.instance.config.otherAttemptInterval
 
-            debug "['%s . %s' #%d] retry, waits #{interval}ms", lockInfo.key, lockInfo.field, attempt
+            logger.verbose "[rpw:#{lockInfo.key}:#{lockInfo.field}] ##{attempt} retry, waits #{interval}ms"
             setTimeout () ->
                 RedisHashLock.acquireLock lockInfo, attempt + 1
             , interval

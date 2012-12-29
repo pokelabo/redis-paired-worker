@@ -1,5 +1,5 @@
 constants = require './constants'
-debug = (require 'debug')(constants.DEBUGKEY)
+logger = require './logger'
 extend = require 'node.extend'
 RedisLock = require './redis-lock'
 RedisHashLock = require './redis-hash-lock'
@@ -20,7 +20,7 @@ class RedisPairedWorker
     # `lockName`: Any name for a lock. Must follow redis' key naming rules.
     # `callback`: The function to call when the attempt has finished.
     lock: (client, lockName, callback) ->
-        debug "['%s'] lock() start --->", lockName
+        logger.verbose "[rpw:#{lockName}] start --->"
 
         lockInfo =
             instance: this
@@ -38,7 +38,7 @@ class RedisPairedWorker
     # `field`: field name for a lock. Must follw redis' key naming rules.
     # `callback`: The function to call when the attempt has finished.
     hlock: (client, key, field, callback) ->
-        debug "['%s'.%s] lock() start --->", key, field
+        logger.verbose "[rpw:#{key}:#{field}] start --->"
 
         lockInfo =
             instance: this
